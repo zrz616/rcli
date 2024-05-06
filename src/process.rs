@@ -3,6 +3,7 @@ use std::fs;
 use csv::Reader;
 
 use anyhow::Result;
+use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::opts::OutputFormat;
@@ -46,6 +47,45 @@ pub fn process_csv(input: &str, output: &str, format: &OutputFormat) -> Result<(
     };
 
     fs::write(format!("{}.{}", output, format), contents)?;
+    Ok(())
+}
+
+// opts::GenPassOpts {
+//     #[arg(short, long, default_value = "16")]
+//     pub length: u8,
+//     #[arg(short, long, default_value = "true")]
+//     pub special: bool,
+//     #[arg(short, long, default_value = "true")]
+//     pub numbers: bool,
+// }
+pub fn generate_password(length: u8, special: bool, numbers: bool) -> Result<()> {
+    let mut password = Vec::with_capacity(length as usize);
+    let mut rng = rand::thread_rng();
+    let mut chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".chars();
+    let mut specials = "!@#$%^&*()_+-=[]{}|;:,.<>?".chars();
+    let mut nums = "0123456789".chars();
+
+    for _ in 0..length {
+        let c = match (special, numbers) {
+            (true, true) => match rng.gen_range(0..3) {
+                0 => chars.next().unwrap(),
+                1 => specials.next().unwrap(),
+                _ => nums.next().unwrap(),
+            },
+            (true, false) => match rng.gen_range(0..2) {
+                0 => chars.next().unwrap(),
+                _ => specials.next().unwrap(),
+            },
+            (false, true) => match rng.gen_range(0..2) {
+                0 => chars.next().unwrap(),
+                _ => nums.next().unwrap(),
+            },
+            (false, false) => chars.next().unwrap(),
+        };
+        password.push(c);
+    }
+    password.shuffle(&mut rng);
+    println!("{:?}", password.iter().collect::<String>());
     Ok(())
 }
 

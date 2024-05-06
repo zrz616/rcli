@@ -27,6 +27,16 @@ pub enum OutputFormat {
     Toml,
 }
 
+#[derive(Debug, Parser)]
+pub struct GenPassOpts {
+    #[arg(short, long, default_value = "16")]
+    pub length: u8,
+    #[arg(long, default_value_t = false)]
+    pub special: bool,
+    #[arg(long, default_value_t = false)]
+    pub numbers: bool,
+}
+
 fn verify_input_file(filename: &str) -> Result<String, &'static str> {
     if Path::new(filename).exists() {
         Ok(filename.into())
