@@ -22,9 +22,14 @@ pub struct Player {
 pub fn process_csv(input: &str, output: &str, format: &OutputFormat) -> Result<()> {
     let mut reader = Reader::from_path(input)?;
     let mut ret = Vec::with_capacity(128);
-    for result in reader.deserialize() {
-        let record: Player = result?;
-        ret.push(record);
+    let headers = reader.headers()?.clone();
+    for result in reader.records() {
+        let record = result?;
+        let json_value = headers
+            .iter()
+            .zip(record.iter())
+            .collect::<serde_json::Value>();
+        ret.push(json_value);
     }
 
     let contents = match format {
@@ -33,7 +38,7 @@ pub fn process_csv(input: &str, output: &str, format: &OutputFormat) -> Result<(
         OutputFormat::Toml => {
             #[derive(Debug, Serialize)]
             struct Config {
-                player: Vec<Player>,
+                player: Vec<serde_json::Value>,
             }
             let config = Config { player: ret };
             toml::to_string_pretty(&config)?
@@ -56,7 +61,7 @@ mod tests {
         process_csv(input, output, &format)?;
         assert_eq!(
             fs::read_to_string("output.json")?,
-            fs::read_to_string("fixtures/test.json")?
+            fs::read_to_string("fixtures/test2.json")?
         );
         Ok(())
     }
@@ -69,7 +74,7 @@ mod tests {
         process_csv(input, output, &format)?;
         assert_eq!(
             fs::read_to_string("output.yaml")?,
-            fs::read_to_string("fixtures/test.yaml")?
+            fs::read_to_string("fixtures/test2.yaml")?
         );
         Ok(())
     }
@@ -82,7 +87,7 @@ mod tests {
         process_csv(input, output, &format)?;
         assert_eq!(
             fs::read_to_string("output.toml")?,
-            fs::read_to_string("fixtures/test.toml")?
+            fs::read_to_string("fixtures/test2.toml")?
         );
         Ok(())
     }
