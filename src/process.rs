@@ -58,16 +58,20 @@ pub fn process_csv(input: &str, output: &str, format: &OutputFormat) -> Result<(
 //     #[arg(short, long, default_value = "true")]
 //     pub numbers: bool,
 // }
-pub fn generate_password(length: u8, special: bool, numbers: bool) -> Result<String> {
+const SPECIALS: &[u8] = b"!@#$%^&*()_+-=[]{}|;:,.<>?";
+const NUMS: &[u8] = b"0123456789";
+const LOWER: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
+const UPPER: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+pub fn generate_password(
+    length: u8,
+    lower: bool,
+    upper: bool,
+    special: bool,
+    numbers: bool,
+) -> Result<String> {
     let mut password = Vec::with_capacity(length as usize);
-    let mut rng = rand::thread_rng();
-    // let mut chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".chars();
-    // let mut specials = "!@#$%^&*()_+-=[]{}|;:,.<>?".chars();
-    // let mut nums = "0123456789".chars();
     let mut chars = Vec::new();
-    const SPECIALS: &[u8] = b"!@#$%^&*()_+-=[]{}|;:,.<>?";
-    const NUMS: &[u8] = b"0123456789";
-    const CHARS: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let mut rng = rand::thread_rng();
 
     if special {
         chars.extend_from_slice(SPECIALS);
@@ -77,33 +81,20 @@ pub fn generate_password(length: u8, special: bool, numbers: bool) -> Result<Str
         chars.extend_from_slice(NUMS);
         password.push(*NUMS.choose(&mut rng).unwrap());
     }
-    chars.extend_from_slice(CHARS);
-    password.push(*CHARS.choose(&mut rng).unwrap());
+    if lower {
+        chars.extend_from_slice(LOWER);
+        password.push(*LOWER.choose(&mut rng).unwrap());
+    }
+    if upper {
+        chars.extend_from_slice(UPPER);
+        password.push(*UPPER.choose(&mut rng).unwrap());
+    }
 
     for _ in 0..(length - password.len() as u8) {
         let c = chars.choose(&mut rng).unwrap();
         password.push(*c);
     }
 
-    // for _ in 0..length {
-    //     let c = match (special, numbers) {
-    //         (true, true) => match rng.gen_range(0..3) {
-    //             0 => chars.next().unwrap(),
-    //             1 => specials.next().unwrap(),
-    //             _ => nums.next().unwrap(),
-    //         },
-    //         (true, false) => match rng.gen_range(0..2) {
-    //             0 => chars.next().unwrap(),
-    //             _ => specials.next().unwrap(),
-    //         },
-    //         (false, true) => match rng.gen_range(0..2) {
-    //             0 => chars.next().unwrap(),
-    //             _ => nums.next().unwrap(),
-    //         },
-    //         (false, false) => chars.next().unwrap(),
-    //     };
-    //     password.push(c);
-    // }
     password.shuffle(&mut rng);
     println!("{:?}", String::from_utf8(password.clone()));
     Ok(String::from_utf8(password)?)
@@ -156,7 +147,7 @@ mod tests {
     #[test]
     fn test_generate_password_by_length() -> Result<()> {
         let length = 16;
-        let output = generate_password(length, true, true)?;
+        let output = generate_password(length, true, true, true, true)?;
         // assert_eq!(stdout.length, 16)
         assert_eq!(output.len(), 16);
         Ok(())
@@ -165,7 +156,7 @@ mod tests {
     #[test]
     fn test_generate_password_without_special() -> Result<()> {
         let length = 16;
-        let output = generate_password(length, false, true)?;
+        let output = generate_password(length, true, true, false, true)?;
         // assert_eq!(stdout.length, 16)
         // String包含字母和数字
         assert!(output
@@ -182,7 +173,7 @@ mod tests {
     #[test]
     fn test_generate_password_without_numbers() {
         let length = 16;
-        let output = generate_password(length, true, false).unwrap();
+        let output = generate_password(length, true, true, true, false).unwrap();
         // String包含字母和特殊字符
         assert!(output
             .chars()

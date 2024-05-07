@@ -31,6 +31,10 @@ pub enum OutputFormat {
 pub struct GenPassOpts {
     #[arg(short, long, default_value = "16")]
     pub length: u8,
+    #[arg(long, default_value = "true")]
+    pub lower: bool,
+    #[arg(long, default_value = "true")]
+    pub upper: bool,
     #[arg(long, default_value_t = false)]
     pub special: bool,
     #[arg(long, default_value_t = false)]
