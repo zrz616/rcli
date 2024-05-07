@@ -58,7 +58,7 @@ pub fn process_csv(input: &str, output: &str, format: &OutputFormat) -> Result<(
 //     #[arg(short, long, default_value = "true")]
 //     pub numbers: bool,
 // }
-pub fn generate_password(length: u8, special: bool, numbers: bool) -> Result<()> {
+pub fn generate_password(length: u8, special: &bool, numbers: &bool) -> Result<String> {
     let mut password = Vec::with_capacity(length as usize);
     let mut rng = rand::thread_rng();
     let mut chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".chars();
@@ -86,11 +86,12 @@ pub fn generate_password(length: u8, special: bool, numbers: bool) -> Result<()>
     }
     password.shuffle(&mut rng);
     println!("{:?}", password.iter().collect::<String>());
-    Ok(())
+    Ok(password.iter().collect())
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
@@ -130,5 +131,46 @@ mod tests {
             fs::read_to_string("fixtures/test2.toml")?
         );
         Ok(())
+    }
+
+    #[test]
+    fn test_generate_password_by_length() -> Result<()> {
+        let length = 16;
+        let output = generate_password(length, &true, &true)?;
+        // assert_eq!(stdout.length, 16)
+        assert_eq!(output.len(), 16);
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_password_without_special() -> Result<()> {
+        let length = 16;
+        let output = generate_password(length, &false, &true)?;
+        // assert_eq!(stdout.length, 16)
+        // String包含字母和数字
+        assert!(output
+            .chars()
+            .any(|c| "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".contains(c)));
+        assert!(output.chars().any(|c| "0123456789".contains(c)));
+        // 字符串不包含特殊字符
+        assert!(!output
+            .chars()
+            .any(|c| "!@#$%^&*()_+-=[]{}|;:,.<>?".contains(c)));
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_password_without_numbers() {
+        let length = 16;
+        let output = generate_password(length, &true, &false).unwrap();
+        // String包含字母和特殊字符
+        assert!(output
+            .chars()
+            .any(|c| "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".contains(c)));
+        assert!(output
+            .chars()
+            .any(|c| "!@#$%^&*()_+-=[]{}|;:,.<>?".contains(c)));
+        // 字符串不包含数字
+        assert!(!output.chars().any(|c| "0123456789".contains(c)));
     }
 }

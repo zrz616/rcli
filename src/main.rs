@@ -22,6 +22,9 @@ fn main() -> Result<()> {
     let opts = Opts::parse();
     match opts.cmd {
         SubCommand::Csv(opts) => process_csv(&opts.input, &opts.output, &opts.format),
-        SubCommand::GenPass(opts) => generate_password(opts.length, opts.special, opts.numbers),
+        SubCommand::GenPass(opts) => {
+            generate_password(opts.length, &opts.special, &opts.numbers)?;
+            Ok(())
+        }
     }
 }
