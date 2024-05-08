@@ -41,6 +41,30 @@ pub struct GenPassOpts {
     pub numbers: bool,
 }
 
+#[derive(Debug, Parser)]
+pub enum Base64Opts {
+    #[command(name = "encode", about = "encode a file to base64")]
+    Encode(EncodeOpts),
+    #[command(name = "decode", about = "decode a base64 file")]
+    Decode(DecodeOpts),
+}
+
+#[derive(Debug, Parser)]
+pub struct EncodeOpts {
+    #[arg(short, long, value_parser = verify_input_file)]
+    pub input: String,
+    #[arg(short, long, default_value = "output")]
+    pub output: String,
+}
+
+#[derive(Debug, Parser)]
+pub struct DecodeOpts {
+    #[arg(short, long, value_parser = verify_input_file)]
+    pub input: String,
+    #[arg(short, long, default_value = "output")]
+    pub output: String,
+}
+
 fn verify_input_file(filename: &str) -> Result<String, &'static str> {
     if Path::new(filename).exists() {
         Ok(filename.into())

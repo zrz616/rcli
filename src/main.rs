@@ -1,6 +1,9 @@
 use anyhow::Result;
 use clap::Parser;
-use rcli::{opts::CsvOpts, opts::GenPassOpts, process::generate_password, process::process_csv};
+use rcli::{
+    opts::{Base64Opts, CsvOpts, GenPassOpts},
+    process::{generate_password, process_csv},
+};
 
 #[derive(Debug, Parser)]
 #[command(name = "rcli", version, author, about, long_about = None)]
@@ -15,6 +18,8 @@ enum SubCommand {
     Csv(CsvOpts),
     #[command(name = "gen-pass", about = "generate a random password")]
     GenPass(GenPassOpts),
+    #[command(subcommand)]
+    Base64(Base64Opts),
 }
 
 // rcli csv -i input.csv -o output.csv --header -d ','
@@ -32,5 +37,9 @@ fn main() -> Result<()> {
             )?;
             Ok(())
         }
+        SubCommand::Base64(opts) => match opts {
+            Base64Opts::Encode(opts) => rcli::process::encode_base64(&opts.input, &opts.output),
+            Base64Opts::Decode(opts) => rcli::process::decode_base64(&opts.input, &opts.output),
+        },
     }
 }

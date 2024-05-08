@@ -1,5 +1,6 @@
 use std::fs;
 
+use base64::prelude::*;
 use csv::Reader;
 
 use anyhow::Result;
@@ -100,6 +101,20 @@ pub fn generate_password(
     Ok(String::from_utf8(password)?)
 }
 
+pub fn encode_base64(input: &str, output: &str) -> Result<()> {
+    let contents = fs::read(input)?;
+    let encoded = BASE64_STANDARD.encode(contents);
+    fs::write(output, encoded)?;
+    Ok(())
+}
+
+pub fn decode_base64(input: &str, output: &str) -> Result<()> {
+    let contents = fs::read(input)?;
+    let decoded = BASE64_STANDARD.decode(contents)?;
+    fs::write(output, decoded)?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -183,5 +198,15 @@ mod tests {
             .any(|c| "!@#$%^&*()_+-=[]{}|;:,.<>?".contains(c)));
         // 字符串不包含数字
         assert!(!output.chars().any(|c| "0123456789".contains(c)));
+    }
+
+    #[test]
+    fn test_encode_by_input_file() -> Result<()> {
+        encode_base64("assets/juventus.csv", "output")?;
+        assert_eq!(
+            fs::read_to_string("output")?,
+            fs::read_to_string("fixtures/test.b64")?
+        );
+        Ok(())
     }
 }
