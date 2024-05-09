@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, io::stdin, io::Read};
 
 use base64::prelude::*;
 use csv::Reader;
@@ -102,6 +102,14 @@ pub fn generate_password(
 }
 
 pub fn encode_base64(input: &str, output: &str) -> Result<()> {
+    if input == "-" {
+        let mut buffer = Vec::new();
+        stdin().read_to_end(&mut buffer)?;
+        let encoded = BASE64_STANDARD.encode(buffer);
+        fs::write(output, encoded)?;
+        println!("{:?}", fs::read_to_string(output)?);
+        return Ok(());
+    }
     let contents = fs::read(input)?;
     let encoded = BASE64_STANDARD.encode(contents);
     fs::write(output, encoded)?;

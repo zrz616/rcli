@@ -66,10 +66,10 @@ pub struct DecodeOpts {
 }
 
 fn verify_input_file(filename: &str) -> Result<String, &'static str> {
-    if Path::new(filename).exists() {
+    if Path::new(filename).exists() || filename == "-" {
         Ok(filename.into())
     } else {
-        Err("Input file does not exist")
+        Err("File does not exist")
     }
 }
 
